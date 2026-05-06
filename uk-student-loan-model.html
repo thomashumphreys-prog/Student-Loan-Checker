@@ -1,0 +1,879 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tbone's Student Loan Calculator</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%231a3a2a'/><text x='50%25' y='54%25' dominant-baseline='middle' text-anchor='middle' font-family='Georgia,serif' font-size='18' font-weight='bold' fill='%2366c68c'>T</text></svg>">
+<link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:       #ffffff;
+    --panel:    #f7f7f5;
+    --card:     #efefeb;
+    --border:   #ddddd8;
+    --border2:  #c8c8c0;
+    --text:     #1a1a18;
+    --muted:    #787870;
+    --dim:      #b8b8b0;
+    --forest:   #1a5c38;
+    --forest-l: #e8f2ec;
+    --forest-b: rgba(26,92,56,0.15);
+    --crimson:  #a02020;
+    --crimson-l:#fdf0f0;
+    --crimson-b:rgba(160,32,32,0.15);
+    --gold:     #8a6200;
+    --gold-l:   #fdf6e3;
+    --gold-b:   rgba(138,98,0,0.15);
+    --navy:     #1a2e5c;
+    --navy-l:   #eef1f8;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 13.5px;
+    line-height: 1.6;
+    min-height: 100vh;
+  }
+
+  /* ── HEADER ── */
+  header {
+    background: var(--forest);
+    padding: 20px 32px 18px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  .header-logo {
+    width: 38px;
+    height: 38px;
+    background: rgba(255,255,255,0.12);
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Libre Baskerville', serif;
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: #fff;
+    flex-shrink: 0;
+    letter-spacing: -0.02em;
+  }
+  .header-text h1 {
+    font-family: 'Libre Baskerville', serif;
+    font-weight: 400;
+    font-size: 1.25rem;
+    letter-spacing: -0.01em;
+    color: #fff;
+    line-height: 1.2;
+  }
+  .header-text h1 em { font-style: italic; opacity: 0.75; }
+  .header-text p { font-size: 11.5px; color: rgba(255,255,255,0.55); margin-top: 2px; letter-spacing: 0.02em; }
+
+  /* ── LAYOUT ── */
+  .layout {
+    display: grid;
+    grid-template-columns: 310px 1fr;
+    min-height: calc(100vh - 76px);
+  }
+
+  /* ── SIDEBAR ── */
+  .sidebar {
+    background: var(--panel);
+    border-right: 1px solid var(--border);
+    overflow-y: auto;
+  }
+  .s-block {
+    padding: 18px 20px;
+    border-bottom: 1px solid var(--border);
+  }
+  .s-title {
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--forest);
+    margin-bottom: 14px;
+  }
+
+  /* Plan tabs */
+  .ptabs { display: grid; grid-template-columns: repeat(4,1fr); gap: 4px; margin-bottom: 10px; }
+  .ptab {
+    padding: 7px 2px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    color: var(--muted);
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 11.5px;
+    font-weight: 500;
+    text-align: center;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: all 0.15s;
+  }
+  .ptab:hover:not(.on) { border-color: var(--border2); color: var(--text); }
+  .ptab.on { background: var(--forest-l); border-color: var(--forest); color: var(--forest); font-weight: 600; }
+
+  /* Fields */
+  .field { margin-bottom: 11px; }
+  .field:last-child { margin-bottom: 0; }
+  .field label {
+    display: block;
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+    font-weight: 500;
+    margin-bottom: 4px;
+  }
+  .fi {
+    display: flex;
+    align-items: center;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    overflow: hidden;
+    transition: border-color 0.15s;
+  }
+  .fi:focus-within { border-color: var(--forest); }
+  .fi-pre {
+    padding: 7px 10px;
+    background: var(--card);
+    border-right: 1px solid var(--border);
+    font-size: 11px;
+    color: var(--muted);
+    font-weight: 600;
+    min-width: 36px;
+    text-align: center;
+    flex-shrink: 0;
+  }
+  .fi input[type="number"] {
+    flex: 1;
+    border: none;
+    background: transparent;
+    padding: 7px 10px;
+    font-size: 13.5px;
+    font-weight: 400;
+    color: var(--text);
+    outline: none;
+    font-family: 'IBM Plex Sans', sans-serif;
+    min-width: 0;
+  }
+  .fi select {
+    flex: 1;
+    border: none;
+    background: transparent;
+    padding: 7px 10px;
+    font-size: 13px;
+    font-weight: 400;
+    color: var(--text);
+    outline: none;
+    font-family: 'IBM Plex Sans', sans-serif;
+    cursor: pointer;
+  }
+  .fi select option { background: var(--bg); color: var(--text); }
+  .hint { font-size: 10.5px; color: var(--muted); margin-top: 3px; line-height: 1.5; }
+
+  /* History box */
+  .hbox {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 10px 13px;
+    margin: 11px 0 9px;
+  }
+  .hrow {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11.5px;
+    padding: 3.5px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .hrow:last-child { border-bottom: none; }
+  .hrow-l { color: var(--muted); }
+  .hrow-v { font-weight: 600; }
+  .c-mint   { color: var(--forest); }
+  .c-rose   { color: var(--crimson); }
+  .c-amber  { color: var(--gold); }
+
+  /* Progress */
+  .prog-bar { height: 3px; background: var(--card); border-radius: 99px; overflow: hidden; margin-bottom: 4px; }
+  .prog-fill { height: 100%; background: var(--forest); border-radius: 99px; transition: width 0.4s ease; }
+  .prog-lbls { display: flex; justify-content: space-between; font-size: 9.5px; color: var(--muted); }
+
+  /* ── MAIN ── */
+  .main { padding: 24px 28px; overflow-y: auto; background: var(--bg); }
+
+  /* Verdict */
+  .verdict {
+    border-radius: 6px;
+    padding: 20px 22px;
+    margin-bottom: 24px;
+    border: 1px solid transparent;
+    border-left-width: 4px;
+  }
+  .v-mint  { background: var(--forest-l);  border-color: var(--forest-b);  border-left-color: var(--forest); }
+  .v-rose  { background: var(--crimson-l); border-color: var(--crimson-b); border-left-color: var(--crimson); }
+  .v-amber { background: var(--gold-l);    border-color: var(--gold-b);    border-left-color: var(--gold); }
+  .v-icon { font-size: 1.2rem; margin-bottom: 5px; line-height: 1; }
+  .v-title {
+    font-family: 'Libre Baskerville', serif;
+    font-weight: 700;
+    font-size: 1.25rem;
+    letter-spacing: -0.01em;
+    line-height: 1.25;
+    margin-bottom: 8px;
+  }
+  .v-mint .v-title  { color: var(--forest); }
+  .v-rose .v-title  { color: var(--crimson); }
+  .v-amber .v-title { color: var(--gold); }
+  .v-body { font-size: 12.5px; color: var(--muted); line-height: 1.75; }
+  .v-body strong { color: var(--text); }
+
+  /* Stats */
+  .stats { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; margin-bottom: 24px; }
+  .stat {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 14px 16px;
+  }
+  .stat-lbl { font-size: 9px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--muted); font-weight: 600; margin-bottom: 5px; }
+  .stat-val {
+    font-family: 'Libre Baskerville', serif;
+    font-size: 1.5rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 1;
+    color: var(--text);
+  }
+  .sv-mint  { color: var(--forest); }
+  .sv-rose  { color: var(--crimson); }
+  .sv-amber { color: var(--gold); }
+  .stat-sub { font-size: 10px; color: var(--muted); margin-top: 4px; }
+
+  .hstats { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; margin-bottom: 24px; }
+
+  /* Section label */
+  .sec {
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .sec::after { content:''; flex:1; height:1px; background: var(--border); }
+
+  /* Compare cards */
+  .compare { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; margin-bottom: 24px; }
+  .ccard {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 16px;
+  }
+  .ccard.best { border-color: var(--forest); background: var(--forest-l); }
+  .ccard.worst { opacity: 0.55; }
+  .cc-badge { font-size: 9px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 8px; color: var(--muted); }
+  .ccard.best .cc-badge { color: var(--forest); }
+  .ccard.worst .cc-badge { color: var(--crimson); }
+  .cc-name { font-size: 11px; font-weight: 600; color: var(--muted); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.06em; }
+  .cc-amount {
+    font-family: 'Libre Baskerville', serif;
+    font-size: 1.5rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 1;
+    margin-bottom: 6px;
+    color: var(--text);
+  }
+  .ccard.best .cc-amount { color: var(--forest); }
+  .cc-detail { font-size: 10.5px; color: var(--muted); line-height: 1.55; }
+
+  /* Lump breakdown */
+  .breakdown { background: var(--panel); border: 1px solid var(--border); border-radius: 6px; overflow: hidden; margin-bottom: 24px; }
+  .bd-flow { display: flex; flex-direction: column; }
+  .bd-row { display: flex; align-items: center; gap: 14px; padding: 13px 18px; border-bottom: 1px solid var(--border); }
+  .bd-row:last-child { border-bottom: none; }
+  .bd-icon { font-size: 1rem; flex-shrink: 0; width: 26px; text-align: center; }
+  .bd-text { flex: 1; }
+  .bd-label { font-size: 9.5px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); font-weight: 600; margin-bottom: 2px; }
+  .bd-desc { font-size: 12.5px; color: var(--muted); line-height: 1.5; }
+  .bd-desc strong { color: var(--text); }
+  .bd-amount { font-family: 'Libre Baskerville', serif; font-size: 1.2rem; font-weight: 700; letter-spacing: -0.02em; text-align: right; flex-shrink: 0; }
+  .bd-amount.c-rose  { color: var(--crimson); }
+  .bd-amount.c-mint  { color: var(--forest); }
+  .bd-amount.c-text  { color: var(--text); }
+  .bd-after { background: var(--card); border-top: 1px solid var(--border); padding: 13px 18px; display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; }
+  .bd-after-stat .bda-lbl { font-size: 9px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); font-weight: 600; margin-bottom: 4px; }
+  .bd-after-stat .bda-val { font-family: 'Libre Baskerville', serif; font-size: 1.15rem; font-weight: 700; letter-spacing: -0.02em; }
+  .bd-after-stat .bda-sub { font-size: 10px; color: var(--muted); margin-top: 2px; }
+
+  /* Purchase card */
+  .purchase-card { background: var(--panel); border: 1px solid var(--border); border-radius: 6px; overflow: hidden; margin-bottom: 24px; }
+  .pc-header { padding: 13px 18px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  .pc-title { font-family: 'Libre Baskerville', serif; font-size: 1rem; font-weight: 700; color: var(--text); }
+  .pc-target { font-family: 'Libre Baskerville', serif; font-size: 1.2rem; font-weight: 700; color: var(--gold); letter-spacing: -0.02em; }
+  .pc-body { display: grid; grid-template-columns: repeat(3,1fr); }
+  .pc-stat { padding: 13px 18px; border-right: 1px solid var(--border); }
+  .pc-stat:last-child { border-right: none; }
+  .pc-lbl { font-size: 9px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--muted); font-weight: 600; margin-bottom: 4px; }
+  .pc-val { font-family: 'Libre Baskerville', serif; font-size: 1.15rem; font-weight: 700; letter-spacing: -0.02em; line-height: 1; }
+  .pc-sub { font-size: 10px; color: var(--muted); margin-top: 3px; }
+  .pc-warning { padding: 12px 18px; border-top: 1px solid var(--border); font-size: 12px; line-height: 1.65; color: var(--muted); }
+  .pc-warning strong { color: var(--text); }
+  .pc-warning.warn-bad   { background: var(--crimson-l); border-top-color: var(--crimson-b); }
+  .pc-warning.warn-ok    { background: var(--forest-l);  border-top-color: var(--forest-b); }
+  .pc-warning.warn-tight { background: var(--gold-l);    border-top-color: var(--gold-b); }
+
+  /* Bar chart */
+  .bar-row { display: flex; align-items: center; gap: 10px; margin-bottom: 7px; }
+  .bar-lbl { width: 160px; font-size: 10.5px; color: var(--muted); text-align: right; flex-shrink: 0; line-height: 1.4; }
+  .bar-track { flex:1; height:20px; background:var(--card); border-radius:3px; overflow:hidden; }
+  .bar-fill { height:100%; display:flex; align-items:center; padding-left:8px; font-size:10px; font-weight:600; transition:width 0.5s cubic-bezier(.4,0,.2,1); border-radius:3px; }
+  .bf-mint  { background: var(--forest);  color: #fff; }
+  .bf-blue  { background: var(--navy);    color: #fff; }
+  .bf-amber { background: var(--gold);    color: #fff; }
+
+  /* Note */
+  .note { font-size: 10.5px; color: var(--muted); border-top: 1px solid var(--border); padding-top: 14px; line-height: 1.8; }
+
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+
+  @media (max-width: 780px) {
+    .layout { grid-template-columns: 1fr; }
+    .sidebar { border-right: none; border-bottom: 1px solid var(--border); }
+    .stats, .hstats, .compare { grid-template-columns: repeat(2,1fr); }
+    .pc-body { grid-template-columns: 1fr 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-logo">T</div>
+  <div class="header-text">
+    <h1>Tbone's Student Loan Calculator</h1>
+
+  </div>
+</header>
+
+<div class="layout">
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+
+    <div class="s-block">
+      <div class="s-title">Loan Plan</div>
+      <div class="ptabs">
+        <button class="ptab" onclick="setPlan(1,this)">Plan 1</button>
+        <button class="ptab on" onclick="setPlan(2,this)">Plan 2</button>
+        <button class="ptab" onclick="setPlan(4,this)">Plan 4</button>
+        <button class="ptab" onclick="setPlan(5,this)">Plan 5</button>
+      </div>
+      <p class="hint" id="plan-hint">Post-2012 English/Welsh · Threshold £27,295 · Rate RPI + 0–3%</p>
+    </div>
+
+    <div class="s-block">
+      <div class="s-title">About Your Loan</div>
+      <div class="field">
+        <label>Year You Graduated</label>
+        <div class="fi"><span class="fi-pre">yr</span><input type="number" id="gradYear" value="2018" min="1990" max="2025" oninput="calculate()"></div>
+        <p class="hint">Repayments start April after graduation</p>
+      </div>
+      <div class="field">
+        <label>Loan Balance at Graduation</label>
+        <div class="fi"><span class="fi-pre">£</span><input type="number" id="origLoan" value="45000" min="0" max="200000" oninput="calculate()"></div>
+        <p class="hint">Check your old loan statement or SLC correspondence</p>
+      </div>
+      <div class="field">
+        <label>Current Balance (from SLC website)</label>
+        <div class="fi"><span class="fi-pre">£</span><input type="number" id="balance" value="38000" min="0" max="200000" oninput="calculate()"></div>
+        <p class="hint">Log in at studentfinance.service.gov.uk</p>
+      </div>
+      <div class="field">
+        <label>Annual Salary (pre-tax)</label>
+        <div class="fi"><span class="fi-pre">£</span><input type="number" id="salary" value="38000" min="0" max="500000" oninput="calculate()"></div>
+      </div>
+      <div class="field">
+        <label>Salary Growth / yr</label>
+        <div class="fi"><span class="fi-pre">%</span><input type="number" id="salGrow" value="3" min="0" max="20" step="0.5" oninput="calculate()"></div>
+      </div>
+      <div class="field">
+        <label>Loan Interest Rate</label>
+        <div class="fi"><span class="fi-pre">%</span><input type="number" id="loanRate" value="7.3" min="0" max="15" step="0.1" oninput="calculate()"></div>
+        <p class="hint">Check studentfinance.service.gov.uk</p>
+      </div>
+      <div class="field">
+        <label>Years Until Write-off</label>
+        <div class="fi"><span class="fi-pre">yrs</span><input type="number" id="writeoff" value="23" min="1" max="40" oninput="calculate()"></div>
+        <p class="hint" id="wo-hint">Plan 2: 30 yrs from April after graduation</p>
+      </div>
+    </div>
+
+    <div class="s-block">
+      <div class="s-title">Lump Sum to Deploy</div>
+      <div class="field">
+        <label>Amount Available</label>
+        <div class="fi"><span class="fi-pre">£</span><input type="number" id="lump" value="10000" min="0" max="200000" oninput="calculate()"></div>
+      </div>
+      <div class="field">
+        <label>Savings / ISA Rate</label>
+        <div class="fi"><span class="fi-pre">%</span><input type="number" id="saveRate" value="4.5" min="0" max="20" step="0.1" oninput="calculate()"></div>
+      </div>
+      <div class="field">
+        <label>Investment Return</label>
+        <div class="fi"><span class="fi-pre">%</span><input type="number" id="invRate" value="7" min="0" max="20" step="0.1" oninput="calculate()"></div>
+        <p class="hint">Global equities avg ~7% real historically</p>
+      </div>
+    </div>
+
+    <div class="s-block">
+      <div class="s-title">Big Purchase Coming Up?</div>
+      <div class="field">
+        <label>What is it?</label>
+        <div class="fi">
+          <select id="purchaseType" onchange="calculate()" style="flex:1;border:none;background:transparent;padding:7px 10px;font-size:13px;font-weight:500;color:var(--text);outline:none;font-family:'Plus Jakarta Sans',sans-serif;cursor:pointer;">
+            <option value="">— None —</option>
+            <option value="house">🏠 House deposit</option>
+            <option value="wedding">💍 Wedding</option>
+            <option value="car">🚗 Car</option>
+            <option value="renovation">🔨 Home renovation</option>
+            <option value="travel">✈️ Travel / sabbatical</option>
+            <option value="other">📦 Something else</option>
+          </select>
+        </div>
+      </div>
+      <div id="purchase-fields" style="display:none">
+        <div class="field">
+          <label>How much will you need?</label>
+          <div class="fi"><span class="fi-pre">£</span><input type="number" id="purchaseAmt" value="20000" min="0" max="2000000" oninput="calculate()"></div>
+        </div>
+        <div class="field">
+          <label>In how many years?</label>
+          <div class="fi"><span class="fi-pre">yrs</span><input type="number" id="purchaseYrs" value="3" min="1" max="30" step="1" oninput="calculate()"></div>
+        </div>
+        <div class="field">
+          <label>You already have saved</label>
+          <div class="fi"><span class="fi-pre">£</span><input type="number" id="purchaseSaved" value="0" min="0" max="2000000" oninput="calculate()"></div>
+          <p class="hint">Leave 0 if starting from scratch</p>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /sidebar -->
+
+  <!-- MAIN -->
+  <div class="main" id="main">
+    <p style="color:var(--dim);margin-top:40px">Calculating…</p>
+  </div>
+
+</div>
+
+<script>
+const PLANS = {
+  1: { thresh: 24990, wo: 25, hint: "Pre-2012 English/Welsh · Threshold £24,990 · Rate RPI (~3%)" },
+  2: { thresh: 27295, wo: 30, hint: "Post-2012 English/Welsh · Threshold £27,295 · Rate RPI + 0–3%" },
+  4: { thresh: 31395, wo: 30, hint: "Scottish (post-2007) · Threshold £31,395 · Rate RPI" },
+  5: { thresh: 25000, wo: 40, hint: "Post-Aug 2023 · Threshold £25,000 · Writes off at age 67" },
+};
+let plan = 2;
+
+function setPlan(p, el) {
+  plan = p;
+  document.querySelectorAll('.ptab').forEach(t => t.classList.remove('on'));
+  el.classList.add('on');
+  document.getElementById('plan-hint').textContent = PLANS[p].hint;
+  document.getElementById('wo-hint').textContent = `Plan ${p}: writes off after ${PLANS[p].wo} years`;
+  calculate();
+}
+
+function fmt(n) {
+  const a = Math.abs(n);
+  if (a >= 1e6) return '£' + (a/1e6).toFixed(2) + 'm';
+  return '£' + Math.round(a).toLocaleString('en-GB');
+}
+function yrs(y) { return y === 1 ? '1 yr' : y + ' yrs'; }
+
+function sim(bal0, sal0, salGrow, rate, thresh, maxYears) {
+  let bal = bal0, repaid = 0, interest = 0, sal = sal0, payoff = null;
+  for (let y = 1; y <= maxYears; y++) {
+    if (bal <= 0) break;
+    const int = bal * rate;
+    const rep = sal > thresh ? (sal - thresh) * 0.09 : 0;
+    const act = Math.min(rep, bal + int);
+    repaid   += act;
+    interest += Math.min(int, bal + int);
+    bal       = Math.max(0, bal + int - rep);
+    sal      *= (1 + salGrow);
+    if (bal <= 0 && !payoff) { payoff = y; bal = 0; break; }
+  }
+  return { bal, repaid, interest, payoff };
+}
+
+function calculate() {
+  const gradYr   = parseInt(document.getElementById('gradYear').value)   || 2018;
+  const origLoan = parseFloat(document.getElementById('origLoan').value) || 0;
+  const balance  = parseFloat(document.getElementById('balance').value)  || 0;
+  const salary   = parseFloat(document.getElementById('salary').value)   || 0;
+  const salGrow  = parseFloat(document.getElementById('salGrow').value)  / 100 || 0;
+  const loanRate = parseFloat(document.getElementById('loanRate').value) / 100 || 0;
+  const writeoff = parseInt(document.getElementById('writeoff').value)   || 25;
+  const lump     = parseFloat(document.getElementById('lump').value)     || 0;
+  const saveRate = parseFloat(document.getElementById('saveRate').value) / 100 || 0;
+  const invRate  = parseFloat(document.getElementById('invRate').value)  / 100 || 0;
+  const thresh   = PLANS[plan].thresh;
+
+  // ── History — derived from origLoan vs actual current balance ──
+  // Principal paid off = origLoan - currentBalance (exact, from real figures)
+  // Interest paid = total repaid - principal paid
+  // We estimate total repaid by simulating backwards at the loan rate over yearsIn
+  const yearsIn = Math.max(0, 2025 - gradYr);
+  const totalTerm = yearsIn + writeoff;
+  const principalPaid = Math.max(0, origLoan - balance);
+  // Estimate interest accrued over yearsIn: origLoan * ((1+r)^n - 1) minus what was paid off
+  const interestAccrued = origLoan * (Math.pow(1 + loanRate, yearsIn) - 1);
+  // Total repaid = principal paid + interest accrued (simplified)
+  const totalPaid = principalPaid + interestAccrued;
+  const interestPaid = interestAccrued;
+  const progPct = totalTerm > 0 ? Math.min(100, yearsIn / totalTerm * 100) : 0;
+
+  // ── Future: base (no change) ──
+  const base      = sim(balance, salary, salGrow, loanRate, thresh, writeoff);
+  const writesOff = base.payoff === null;
+  const balAtWO   = base.bal;
+
+  // How long are we actually repaying?
+  const repPeriod = writesOff ? writeoff : base.payoff;
+
+  // Effective rate (write-off adjusted)
+  const effRate = writesOff && balance > 0
+    ? (base.repaid / balance / writeoff) * 100
+    : loanRate * 100;
+
+  // Monthly repayment at current salary
+  const monthly = salary > thresh ? ((salary - thresh) * 0.09) / 12 : 0;
+
+  // ── Future: with lump sum applied to loan ──
+  const baseL = sim(Math.max(0, balance - lump), salary, salGrow, loanRate, thresh, writeoff);
+
+  // Interest saved by putting lump on the loan
+  // Only meaningful if you actually pay it off; if it writes off, no saving
+  const intSaved = writesOff ? 0 : Math.max(0, base.repaid - (lump + baseL.repaid));
+
+  // ── Invest / save the lump sum over the repayment period ──
+  // Key: we compare what the SAME money does over the SAME timeframe (repPeriod)
+  // invest/save: starting with lump, compounding for repPeriod years
+  const invGrowth  = lump * Math.pow(1 + invRate,  repPeriod) - lump;  // gain only
+  const saveGrowth = lump * Math.pow(1 + saveRate, repPeriod) - lump;  // gain only
+
+  // ── Verdict ──
+  let vCls, vIcon, vTitle, vBody;
+  if (writesOff) {
+    vCls = 'v-rose'; vIcon = '📈';
+    vTitle = "Don't overpay — invest instead";
+    vBody = `Your loan will be <strong>written off in ${yrs(writeoff)}</strong> with <strong>${fmt(balAtWO)}</strong> cancelled. Overpaying reduces a balance that disappears — it's money wasted. Your true effective rate, once write-off is factored in, is only <strong>${effRate.toFixed(1)}%</strong>. Over the same ${writeoff} years, your <strong>${fmt(lump)}</strong> could grow by <strong>${fmt(invGrowth)}</strong> if invested.`;
+  } else if (loanRate * 100 > invRate * 100) {
+    vCls = 'v-mint'; vIcon = '✅';
+    vTitle = 'Paying off early makes sense';
+    vBody = `You'll fully repay in <strong>~${yrs(base.payoff)}</strong>. Your loan rate (<strong>${(loanRate*100).toFixed(1)}%</strong>) beats expected investment returns (<strong>${(invRate*100).toFixed(1)}%</strong>), so paying down debt is the better guaranteed return. Putting <strong>${fmt(lump)}</strong> on the loan saves <strong>${fmt(intSaved)}</strong> in interest${baseL.payoff && base.payoff > baseL.payoff ? ` and clears it <strong>${yrs(base.payoff - baseL.payoff)}</strong> sooner` : ''}.`;
+  } else {
+    vCls = 'v-amber'; vIcon = '⚖️';
+    vTitle = 'Investing edges it — but it\'s close';
+    vBody = `You'll fully repay in <strong>~${yrs(base.payoff)}</strong>. Your expected investment return (<strong>${(invRate*100).toFixed(1)}%</strong>) is ahead of your loan rate (<strong>${(loanRate*100).toFixed(1)}%</strong>), so investing wins mathematically. But the gap is small and investing carries risk — paying off debt is guaranteed. Consider your job security.`;
+  }
+
+  document.getElementById('main').innerHTML = `
+
+    <div class="verdict ${vCls}">
+      <div class="v-icon">${vIcon}</div>
+      <div class="v-title">${vTitle}</div>
+      <div class="v-body">${vBody}</div>
+    </div>
+
+    <div class="sec">Key numbers</div>
+    <div class="stats" style="margin-bottom:22px">
+      <div class="stat">
+        <div class="stat-lbl">Monthly Repayment</div>
+        <div class="stat-val">${fmt(monthly)}</div>
+        <div class="stat-sub">at current salary</div>
+      </div>
+      <div class="stat">
+        <div class="stat-lbl">${writesOff ? 'Written Off In' : 'Paid Off In'}</div>
+        <div class="stat-val ${writesOff ? 'sv-rose' : 'sv-mint'}">${writesOff ? yrs(writeoff) : yrs(base.payoff)}</div>
+        <div class="stat-sub">${writesOff ? fmt(balAtWO) + ' cancelled' : 'fully cleared'}</div>
+      </div>
+      <div class="stat">
+        <div class="stat-lbl">Effective Rate</div>
+        <div class="stat-val sv-amber">${effRate.toFixed(1)}%</div>
+        <div class="stat-sub">${writesOff ? 'true cost after write-off' : 'equals headline rate'}</div>
+      </div>
+    </div>
+
+    <div class="sec">What does ${fmt(lump)} do over ${yrs(repPeriod)}?</div>
+    <div class="compare" style="margin-bottom:22px">
+      ${ccard(
+        'Pay Off Loan',
+        writesOff ? '£0' : fmt(intSaved),
+        'interest saved',
+        writesOff ? 'worst' : loanRate*100 > invRate*100 ? 'best' : '',
+        writesOff
+          ? 'Loan writes off anyway — no benefit'
+          : baseL.payoff && base.payoff > baseL.payoff
+            ? `Clears ${yrs(base.payoff - baseL.payoff)} sooner · guaranteed`
+            : 'Reduces total interest · guaranteed'
+      )}
+      ${ccard(
+        'Invest',
+        fmt(invGrowth),
+        `gain over ${yrs(repPeriod)} at ${(invRate*100).toFixed(1)}%`,
+        !writesOff && invRate*100 <= loanRate*100 ? '' : 'best',
+        'Higher return potential · but carries risk'
+      )}
+      ${ccard(
+        'Save (ISA / cash)',
+        fmt(saveGrowth),
+        `gain over ${yrs(repPeriod)} at ${(saveRate*100).toFixed(1)}%`,
+        '',
+        'Low risk · easy access · lower return'
+      )}
+    </div>
+
+    <div class="sec">If you pay ${fmt(lump)} today — where does it go?</div>
+    ${lumpBreakdown(lump, balance, loanRate, salary, salGrow, thresh, writeoff, base, writesOff)}
+
+    <div class="sec">What you've paid since ${gradYr}</div>
+    <div class="hstats" style="margin-bottom:22px">
+      <div class="stat">
+        <div class="stat-lbl">Total Paid In</div>
+        <div class="stat-val sv-rose">${fmt(totalPaid)}</div>
+        <div class="stat-sub">est. repayments over ${yearsIn} yrs</div>
+      </div>
+      <div class="stat">
+        <div class="stat-lbl">Went to Interest</div>
+        <div class="stat-val sv-rose">${fmt(interestPaid)}</div>
+        <div class="stat-sub">${totalPaid > 0 ? Math.round(interestPaid/totalPaid*100) : 0}% of all payments</div>
+      </div>
+      <div class="stat">
+        <div class="stat-lbl">Principal Cleared</div>
+        <div class="stat-val sv-mint">${fmt(principalPaid)}</div>
+        <div class="stat-sub">${origLoan > 0 ? Math.round(principalPaid/origLoan*100) : 0}% of original loan</div>
+      </div>
+    </div>
+
+    ${purchaseSection(lump, saveRate, salary, monthly)}
+
+    <div class="note">
+      ⚠ Estimates only — not financial advice. Verify your balance at studentfinance.service.gov.uk. Assumes consistent salary growth and a fixed interest rate, which will both vary. Consider speaking to an independent financial adviser before making large voluntary overpayments.
+    </div>
+  `;
+}
+
+function lumpBreakdown(lump, balance, loanRate, salary, salGrow, thresh, writeoff, base, writesOff) {
+  if (lump <= 0) return `<p class="hint" style="margin-bottom:22px;padding:0 2px">Enter a lump sum amount in the sidebar to see this breakdown.</p>`;
+
+  // Interest that has accrued this year on the current balance
+  const yearlyInterest = balance * loanRate;
+
+  // Step 1: lump first clears any accrued interest, remainder hits principal
+  const toInterest  = Math.min(lump, yearlyInterest);
+  const toPrincipal = Math.max(0, lump - toInterest);
+  const newBalance  = Math.max(0, balance - toPrincipal);
+
+  // Step 2: simulate forward from new balance
+  const after = sim(newBalance, salary, salGrow, loanRate, thresh, writeoff);
+  const afterWritesOff = after.payoff === null;
+
+  // Changes
+  const balanceReduction = balance - newBalance;
+  const interestSavedTotal = writesOff ? 0 : Math.max(0, base.repaid - (lump + after.repaid));
+  const yearsSooner = (!writesOff && !afterWritesOff && base.payoff && after.payoff)
+    ? base.payoff - after.payoff : 0;
+
+  const newMonthly = newBalance > 0 && salary > thresh
+    ? ((salary - thresh) * 0.09) / 12
+    : 0; // monthly doesn't change — it's salary-based, not balance-based
+
+  return `
+  <div class="breakdown" style="margin-bottom:22px">
+    <div class="bd-flow">
+
+      <div class="bd-row">
+        <div class="bd-icon">💸</div>
+        <div class="bd-text">
+          <div class="bd-label">You pay in</div>
+          <div class="bd-desc">Your lump sum payment of <strong>${fmt(lump)}</strong></div>
+        </div>
+        <div class="bd-amount c-text">${fmt(lump)}</div>
+      </div>
+
+      <div class="bd-row" style="background:rgba(240,107,107,0.05)">
+        <div class="bd-icon">📈</div>
+        <div class="bd-text">
+          <div class="bd-label">First: clears accrued interest</div>
+          <div class="bd-desc">This year's interest on your <strong>${fmt(balance)}</strong> balance at <strong>${(loanRate*100).toFixed(1)}%</strong> — paid first before touching principal</div>
+        </div>
+        <div class="bd-amount c-rose">−${fmt(toInterest)}</div>
+      </div>
+
+      <div class="bd-row" style="background:rgba(45,212,176,0.04)">
+        <div class="bd-icon">🎯</div>
+        <div class="bd-text">
+          <div class="bd-label">Then: reduces your principal</div>
+          <div class="bd-desc">The remaining <strong>${fmt(toPrincipal)}</strong> comes straight off your loan balance</div>
+        </div>
+        <div class="bd-amount c-mint">−${fmt(toPrincipal)}</div>
+      </div>
+
+    </div>
+
+    <div class="bd-after">
+      <div class="bd-after-stat">
+        <div class="bda-lbl">New Balance</div>
+        <div class="bda-val" style="color:var(--mint)">${fmt(newBalance)}</div>
+        <div class="bda-sub">down from ${fmt(balance)}</div>
+      </div>
+      <div class="bd-after-stat">
+        <div class="bda-lbl">${afterWritesOff ? 'Still writes off in' : 'Now paid off in'}</div>
+        <div class="bda-val" style="color:${afterWritesOff ? 'var(--rose)' : 'var(--mint)'}">
+          ${afterWritesOff ? yrs(writeoff) : yrs(after.payoff)}
+        </div>
+        <div class="bda-sub">${yearsSooner > 0 ? `${yrs(yearsSooner)} sooner` : afterWritesOff ? `${fmt(after.bal)} cancelled` : 'vs ' + yrs(base.payoff) + ' before'}</div>
+      </div>
+      <div class="bd-after-stat">
+        <div class="bda-lbl">${writesOff ? 'Interest impact' : 'Total interest saved'}</div>
+        <div class="bda-val" style="color:${writesOff ? 'var(--muted)' : 'var(--amber)'}">
+          ${writesOff ? 'None' : fmt(interestSavedTotal)}
+        </div>
+        <div class="bda-sub">${writesOff ? 'loan writes off anyway' : 'over remaining term'}</div>
+      </div>
+    </div>
+  </div>`;
+}
+
+function ccard(name, amount, sublabel, cls, detail) {
+  const badge = cls === 'best' ? '★ Best option' : cls === 'worst' ? '✗ Not recommended' : '–';
+  return `<div class="ccard ${cls}">
+    <div class="cc-badge">${badge}</div>
+    <div class="cc-name">${name}</div>
+    <div class="cc-amount">${amount}</div>
+    <div class="cc-detail">${sublabel}<br>${detail}</div>
+  </div>`;
+}
+
+function purchaseSection(lump, saveRate, salary, monthly) {
+  const type    = document.getElementById('purchaseType').value;
+  const amt     = parseFloat(document.getElementById('purchaseAmt').value)    || 0;
+  const years   = parseFloat(document.getElementById('purchaseYrs').value)    || 1;
+  const saved   = parseFloat(document.getElementById('purchaseSaved').value)  || 0;
+
+  if (!type) return '';
+
+  const labels = {
+    house: 'House deposit', wedding: 'Wedding', car: 'Car',
+    renovation: 'Home renovation', travel: 'Travel / sabbatical', other: 'Big purchase'
+  };
+  const icons = { house:'🏠', wedding:'💍', car:'🚗', renovation:'🔨', travel:'✈️', other:'📦' };
+
+  const name = labels[type] || 'Big purchase';
+  const icon = icons[type] || '📦';
+  const stillNeeded = Math.max(0, amt - saved);
+
+  const r = saveRate / 12;
+  const n = years * 12;
+  const fvSaved = saved * Math.pow(1 + r, n);
+  const stillAfterGrowth = Math.max(0, amt - fvSaved);
+  const monthlyNeeded = r > 0
+    ? stillAfterGrowth * r / (Math.pow(1 + r, n) - 1)
+    : (n > 0 ? stillAfterGrowth / n : 0);
+
+  const stillIfLumpOnLoan = Math.max(0, amt - fvSaved);
+  const monthlyIfLumpOnLoan = monthlyNeeded; // same — lump on loan doesn't help the purchase
+  // actually if lump goes on loan, they don't have it to save. so monthly needed stays same as base
+  // the insight is: they cannot use lump for BOTH
+
+  const lumpGrown = lump * Math.pow(1 + r, n);
+  const stillIfSaveLump = Math.max(0, amt - fvSaved - lumpGrown);
+  const monthlyIfSaveLump = stillIfSaveLump <= 0 ? 0
+    : r > 0 ? stillIfSaveLump * r / (Math.pow(1 + r, n) - 1)
+    : stillIfSaveLump / n;
+
+  const takeHome = salary * 0.72 / 12;
+  const surplusAfterLoan = Math.max(0, takeHome - monthly);
+  const tight = monthlyNeeded > 0 && monthlyNeeded > surplusAfterLoan * 0.35;
+  const conflictsWithLump = lump > 0 && lump >= stillNeeded * 0.5;
+
+  let warnClass, warnText;
+  if (lump > 0 && lumpGrown >= stillAfterGrowth) {
+    warnClass = 'warn-ok';
+    warnText = `Your lump sum of <strong>${fmt(lump)}</strong> — if saved rather than put on the loan — would grow to <strong>${fmt(lumpGrown)}</strong> and cover your ${name.toLowerCase()} target entirely, with no extra monthly saving needed.`;
+  } else if (lump > 0 && conflictsWithLump) {
+    warnClass = 'warn-bad';
+    warnText = `⚠ Your lump sum of <strong>${fmt(lump)}</strong> is a significant chunk of your ${name.toLowerCase()} target. If you put it on the loan, you'll still need to save <strong>${fmt(monthlyNeeded)}/month</strong> to reach ${fmt(amt)} in ${years === 1 ? '1 year' : years + ' years'}. If you save it toward the purchase instead, you'd only need <strong>${fmt(monthlyIfSaveLump)}/month</strong>.`;
+  } else if (tight) {
+    warnClass = 'warn-tight';
+    warnText = `You'll need <strong>${fmt(monthlyNeeded)}/month</strong> over ${years === 1 ? '1 year' : years + ' years'} — a meaningful commitment alongside loan repayments. Make sure this is factored in before deploying the lump sum elsewhere.`;
+  } else {
+    warnClass = 'warn-ok';
+    warnText = `Saving <strong>${fmt(monthlyNeeded)}/month</strong> over ${years === 1 ? '1 year' : years + ' years'} looks manageable alongside your loan repayments. ${lump > 0 ? `If you save <strong>${fmt(lump)}</strong> toward this goal instead of the loan, you'd only need <strong>${fmt(monthlyIfSaveLump)}/month</strong> on top.` : ''}`;
+  }
+
+  return `
+  <div class="sec">${icon} ${name} in ${years === 1 ? '1 year' : years + ' years'}</div>
+  <div class="purchase-card" style="margin-bottom:22px">
+    <div class="pc-header">
+      <div class="pc-title">${icon} ${name}</div>
+      <div class="pc-target">${fmt(amt)}</div>
+    </div>
+    <div class="pc-body">
+      <div class="pc-stat">
+        <div class="pc-lbl">Already saved</div>
+        <div class="pc-val" style="color:var(--mint)">${fmt(saved)}</div>
+        <div class="pc-sub">grows to ${fmt(Math.round(fvSaved))} by then</div>
+      </div>
+      <div class="pc-stat">
+        <div class="pc-lbl">Still needed</div>
+        <div class="pc-val" style="color:var(--amber)">${fmt(stillNeeded)}</div>
+        <div class="pc-sub">gap to close</div>
+      </div>
+      <div class="pc-stat">
+        <div class="pc-lbl">Save per month</div>
+        <div class="pc-val" style="color:${tight ? 'var(--rose)' : 'var(--text)'}">${fmt(monthlyNeeded)}</div>
+        <div class="pc-sub">to hit target in time</div>
+      </div>
+    </div>
+    ${lump > 0 ? `
+    <div style="border-top:1px solid var(--border);display:grid;grid-template-columns:1fr 1fr;">
+      <div class="pc-stat" style="border-right:1px solid var(--border)">
+        <div class="pc-lbl">Put ${fmt(lump)} on the loan instead</div>
+        <div class="pc-val" style="color:var(--rose)">${fmt(monthlyNeeded)}/mo</div>
+        <div class="pc-sub">still needed to reach target</div>
+      </div>
+      <div class="pc-stat">
+        <div class="pc-lbl">Save ${fmt(lump)} toward this goal</div>
+        <div class="pc-val" style="color:var(--mint)">${monthlyIfSaveLump <= 0 ? 'Covered ✓' : fmt(monthlyIfSaveLump) + '/mo'}</div>
+        <div class="pc-sub">${monthlyIfSaveLump <= 0 ? 'lump sum covers the gap' : 'needed on top of lump sum'}</div>
+      </div>
+    </div>` : ''}
+    <div class="pc-warning ${warnClass}">${warnText}</div>
+  </div>`;
+}
+
+// Show/hide purchase fields
+document.getElementById('purchaseType').addEventListener('change', function() {
+  document.getElementById('purchase-fields').style.display = this.value ? 'block' : 'none';
+  calculate();
+});
+
+calculate();
+</script>
+</body>
+</html>
